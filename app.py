@@ -1,65 +1,84 @@
 import streamlit as st
-from sql_chatbot_chain import db_chain
+from sql_chatbot_chain import db_chain, get_db_schema
 from rag_chain import rag_chain
-from typing import Any, List
 import re
 
 st.set_page_config(page_title="E-commerce Chat Assistant", layout="wide")
-st.title("E-commerce Chat Assistant")
+st.title("💬 E-commerce Chat Assistant")
 
-# Initialize session state for chat history
+# Predefined sample questions
+sample_questions = [
+    "What does shipping mean?",
+    "What is pending order status?",
+    "What is the return policy?",
+    "Show top 5 customers by total spend",
+    "Which product has the lowest stock?",
+    "List all orders with 'PENDING' status",
+    "How does the refund process work?",
+    "Top 5 cities by order volume"
+]
+
+# Initialize session state
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# Smart RAG detection based on query content
+# Smart logic to detect whether to use RAG
 def is_rag_query(query: str) -> bool:
     q = query.lower()
-    # doc_keywords = [
-    #     "policy", "workflow", "return", "refund", "meaning of", "explain",
-    #     "how does", "guidelines", "terms", "definition", "process"
-    # ]
-    # likely_sql_patterns = [
-    #     r"\btop\b", r"\bmost\b", r"\bleast\b", r"\btotal\b", r"\bsum\b",
-    #     r"\bcount\b", r"\bshow\b", r"\blist\b", r"\bnumber of\b",
-    #     r"\bhow many\b", r"\bwhich\b.*\b(product|customer|order|payment)\b"
-    # ]
-    # if any(re.search(p, q) for p in likely_sql_patterns):
-    #     return False
-    rag_keywords = ["explain", "what does", "how does", "define", "meaning of", "status of", "policy", "return", "workflow"]
-    # return any(k in q for k in doc_keywords)
-    return any(kw in query.lower() for kw in rag_keywords)
+    rag_keywords = [
+        "explain", "what does", "how does", "define", "meaning of",
+        "status of", "policy", "return", "workflow", "terms", "guidelines"
+    ]
+    return any(kw in q for kw in rag_keywords)
 
-# Ask user for a question
-query = st.text_input("Ask your question:")
+# Sidebar – Schema Viewer
+st.sidebar.header("🧱 Database Tables")
+try:
+    schema = get_db_schema()
+    for table, columns in schema.items():
+        with st.sidebar.expander(f"📦 {table}", expanded=False):
+            st.markdown("**Columns:**")
+            for col in columns:
+                st.markdown(f"- {col}")
+except Exception as e:
+    st.sidebar.error(f"Could not load schema: {e}")
 
-if query:
-    with st.spinner("Thinking..."):
+# Input box with suggestions
+st.markdown("### Ask your question")
+query = st.selectbox("Choose a predefined question or type your own:", options=[""] + sample_questions, index=0)
+custom_input = st.text_input("Or enter a new question:")
+
+# Use input from dropdown if custom not entered
+final_query = custom_input.strip() if custom_input.strip() else query
+
+if final_query:
+    with st.spinner("🤖 Thinking..."):
         try:
-            if is_rag_query(query):
-                response = rag_chain.invoke(query)
+            if is_rag_query(final_query):
+                response = rag_chain.invoke(final_query)
             else:
-                response = db_chain(query)
+                response = db_chain(final_query)
 
-            # Show result
-            st.markdown("### Answer:")
+            # Display answer
+            st.markdown("### 🧠 Answer")
             if isinstance(response, list) and all(isinstance(row, (list, tuple)) for row in response):
                 st.dataframe(response)
             else:
                 st.markdown(response)
 
-            # Save to session history
+            # Update history
             st.session_state.chat_history.append({
-                "user": query,
+                "user": final_query,
                 "bot": response
             })
 
         except Exception as e:
-            st.error(f"Error: {str(e)}")
+            st.error(f"❌ Error: {str(e)}")
 
-# Show chat history
+# Chat history
 if st.session_state.chat_history:
     st.markdown("---")
-    st.markdown("### Chat History")
-    for chat in reversed(st.session_state.chat_history[-5:]):  # last 5 exchanges
+    st.markdown("### 📜 Chat History")
+    for chat in reversed(st.session_state.chat_history[-5:]):
         st.markdown(f"**You:** {chat['user']}")
         st.markdown(f"**Bot:** {chat['bot']}")
