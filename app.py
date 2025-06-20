@@ -48,7 +48,9 @@ def is_rag_query(query: str) -> bool:
 st.markdown("### Ask your question")
 selected = st.selectbox("Choose a predefined question or type your own:", sample_questions)
 
-if selected == "Type your own...":
+# Validate and proceed only if actual user input exists
+if final_query and final_query.lower().strip() not in ["", "type your own..."]:
+
     custom_query = st.text_input("Enter your question here:")
     final_query = custom_query.strip()
 else:
