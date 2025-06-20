@@ -1,0 +1,84 @@
+🛒 CUSTOMERS TABLE:
+- Stores details of registered users.
+- Fields:
+  - id: Unique identifier for each customer.
+  - name: Full name of the customer.
+  - city: Customer’s city, useful for region-based insights.
+
+📦 PRODUCTS TABLE:
+- Contains information about products listed for sale.
+- Fields:
+  - id: Product ID.
+  - name: Product name.
+  - category: Type of product (e.g., Electronics, Clothing).
+  - price: Unit price.
+  - description: Short product description.
+
+📦 STOCK TABLE:
+- Tracks available inventory per product.
+- Fields:
+  - product_id: ID of the product (linked to products).
+  - available_quantity: Units in stock.
+- Note: Stock is reduced when orders are placed.
+
+🧾 ORDERS TABLE:
+- Represents a customer’s purchase event.
+- Fields:
+  - id: Order ID.
+  - customer_id: Linked to the customer placing the order.
+  - order_date: Date when the order was placed.
+  - total_amount: Calculated sum of (price × quantity) of order items.
+  - status: Order status (see below).
+- Relationships: One order can have many items.
+
+📑 ORDER STATUSES:
+- PENDING: Order created but not processed yet.
+- SHIPPED: Order has been packed and dispatched.
+- DELIVERED: Order has reached the customer.
+- CANCELLED: Order was stopped before shipping.
+
+📋 ORDER_ITEMS TABLE:
+- Line items for each product within an order.
+- Fields:
+  - order_id: The order it belongs to.
+  - product_id: Product purchased.
+  - quantity: How many units of the product.
+  - price_per_unit: Unit price at time of order.
+- Note: total_amount in orders is sum of quantity × price_per_unit from here.
+
+💳 PAYMENTS TABLE:
+- Records transaction status for orders.
+- Fields:
+  - order_id: Linked to orders table.
+  - payment_status: Current payment state.
+  - payment_date: Date when payment was processed.
+
+💰 PAYMENT STATUSES:
+- PAID: Payment successful.
+- FAILED: Attempted but did not succeed.
+- PENDING: Still awaiting payment.
+
+🚚 SHIPMENTS TABLE:
+- Stores delivery-related info.
+- Fields:
+  - order_id: Related order.
+  - delivery_address: Address to which order was sent.
+  - shipped_date: When it left the warehouse.
+  - delivery_status: Current shipping state.
+
+🚚 DELIVERY STATUSES:
+- PENDING: Waiting to be shipped.
+- DISPATCHED: Out for delivery.
+- DELIVERED: Arrived at destination.
+
+🧠 CALCULATIONS & INSIGHTS:
+- Order total = sum of (price_per_unit × quantity) for all items in that order.
+- Out-of-stock items have available_quantity = 0.
+- Frequent customers can be identified by counting number of orders.
+- Product popularity = count of times product appears in order_items.
+- You can check city-wise revenue by joining customers → orders.
+
+📌 NOTES:
+- All foreign keys are properly indexed.
+- Order and payment are separate for flexibility.
+- Historical pricing is captured using price_per_unit in order_items (in case product price changes later).
