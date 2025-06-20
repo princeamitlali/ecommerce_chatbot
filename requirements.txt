@@ -1,0 +1,19 @@
+# Core LangChain packages
+langchain>=0.1.16
+langchain-community>=0.0.37
+langchain-google-genai>=0.0.11
+
+# Google Gemini SDK (for direct access/testing)
+google-generativeai>=0.4.0
+
+# Streamlit for UI
+streamlit>=1.32.0
+
+# SQLite support (SQLAlchemy is required for LangChain's SQLDatabase)
+sqlalchemy>=2.0.0
+
+# For environment variables
+python-dotenv>=1.0.0
+
+# Optional logging enhancements (standard lib logging is fine too)
+loguru>=0.7.2
