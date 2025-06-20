@@ -34,6 +34,15 @@ agent_executor = create_sql_agent(
 # Destructive SQL patterns to block
 DESTRUCTIVE_PATTERN = re.compile(r"\b(DELETE|DROP|UPDATE|INSERT|TRUNCATE|ALTER|REPLACE)\b", re.IGNORECASE)
 
+def get_db_schema():
+    from sqlalchemy import inspect
+    inspector = inspect(db)
+    schema = {}
+    for table_name in inspector.get_table_names():
+        columns = [col["name"] for col in inspector.get_columns(table_name)]
+        schema[table_name] = columns
+    return schema
+
 def db_chain(user_query: str, raw_output=False):
     result = None
 
