@@ -1,4 +1,3 @@
-
 import streamlit as st
 from sql_chatbot_chain import db_chain, get_db_schema
 from rag_chain import rag_chain
@@ -16,8 +15,7 @@ sample_questions = [
     "Which product has the lowest stock?",
     "List all orders with 'PENDING' status",
     "How does the refund process work?",
-    "Top 5 cities by order volume",
-    "Type your own..."
+    "Top 5 cities by order volume"
 ]
 
 # Initialize session state
@@ -34,29 +32,25 @@ def is_rag_query(query: str) -> bool:
     return any(kw in q for kw in rag_keywords)
 
 # Sidebar – Schema Viewer
-# st.sidebar.header("🧱 Database Tables")
-# try:
-#     schema = get_db_schema()
-#     for table, columns in schema.items():
-#         with st.sidebar.expander(f"📦 {table}", expanded=False):
-#             for col in columns:
-#                 st.markdown(f"- {col}")
-# except Exception as e:
-#     st.sidebar.error(f"Could not load schema: {e}")
+st.sidebar.header("🧱 Database Tables")
+try:
+    schema = get_db_schema()
+    for table, columns in schema.items():
+        with st.sidebar.expander(f"📦 {table}", expanded=False):
+            st.markdown("**Columns:**")
+            for col in columns:
+                st.markdown(f"- {col}")
+except Exception as e:
+    st.sidebar.error(f"Could not load schema: {e}")
 
-# Input Section (Dropdown + Text Input)
+# Input box with suggestions
 st.markdown("### Ask your question")
-selected = st.selectbox("Choose a predefined question or type your own:", sample_questions)
+query = st.selectbox("Choose a predefined question or type your own:", options=[""] + sample_questions, index=0)
+custom_input = st.text_input("Or enter a new question:")
 
-# Validate and proceed only if actual user input exists
-if final_query and final_query.lower().strip() not in ["", "type your own..."]:
+# Use input from dropdown if custom not entered
+final_query = custom_input.strip() if custom_input.strip() else query
 
-    custom_query = st.text_input("Enter your question here:")
-    final_query = custom_query.strip()
-else:
-    final_query = selected
-
-# Process query
 if final_query:
     with st.spinner("🤖 Thinking..."):
         try:
@@ -65,14 +59,14 @@ if final_query:
             else:
                 response = db_chain(final_query)
 
-            # Display response
+            # Display answer
             st.markdown("### 🧠 Answer")
             if isinstance(response, list) and all(isinstance(row, (list, tuple)) for row in response):
                 st.dataframe(response)
             else:
                 st.markdown(response)
 
-            # Save to session history
+            # Update history
             st.session_state.chat_history.append({
                 "user": final_query,
                 "bot": response
@@ -81,7 +75,7 @@ if final_query:
         except Exception as e:
             st.error(f"❌ Error: {str(e)}")
 
-# Chat History Section
+# Chat history
 if st.session_state.chat_history:
     st.markdown("---")
     st.markdown("### 📜 Chat History")
