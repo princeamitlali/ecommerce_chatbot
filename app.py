@@ -5,6 +5,15 @@ import re
 
 st.set_page_config(page_title="E-commerce Chat Assistant", layout="wide")
 st.title("💬 E-commerce Chat Assistant")
+st.warning("🔁 Please avoid making more than 1 query per minute to avoid rate limit errors.", icon="⚠️")
+
+with st.expander("Why this is important?"):
+    st.markdown("""
+    - LLM APIs like **OpenAI** or **Gemini Pro** have usage quotas.
+    - Too many queries in a short time may trigger rate limit blocks or fail with errors.
+    - If you're using a **free-tier key**, throttling is even more likely.
+    - ✅ For best results, wait at least **60 seconds** between queries.
+    """)
 
 # Predefined sample questions
 sample_questions = [
